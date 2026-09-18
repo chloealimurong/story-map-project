@@ -1,14 +1,14 @@
 /**
- * A slide deck object
+ * A slide deck object (Mapbox GL JS version)
  */
 class SlideDeck {
   /**
    * Constructor for the SlideDeck object.
    * @param {Node} container The container element for the slides.
    * @param {NodeList} slides A list of HTML elements containing the slide text.
-   * @param {L.map} map The Leaflet map where data will be shown.
-   * @param {object} slideOptions The options to create each slide's L.geoJSON
-   *                              layer, keyed by slide ID.
+   * @param {mapboxgl.Map} map The Mapbox GL map where data will be shown.
+   * @param {object} slideOptions Paint options for each slide's layers, keyed by slide ID.
+   *                              e.g. { "second-slide": { circlePaint: {...} } }
    */
   constructor(container, slides, map, slideOptions = {}) {
     this.container = container;
@@ -16,39 +16,100 @@ class SlideDeck {
     this.map = map;
     this.slideOptions = slideOptions;
 
-    this.dataLayer = L.layerGroup().addTo(map);
+    this.sourceId = 'slide-data';
     this.currentSlideIndex = 0;
+    this.activePopups = [];
+
+    this._initLayers();
+  }
+
+  /**
+   * Set up an empty GeoJSON source and the point/line/polygon layers that
+   * will render whatever data gets loaded for the current slide.
+   */
+  _initLayers() {
+    const emptyCollection = { type: 'FeatureCollection', features: [] };
+
+    if (!this.map.getSource(this.sourceId)) {
+      this.map.addSource(this.sourceId, {
+        type: 'geojson',
+        data: emptyCollection,
+      });
+
+      this.map.addLayer({
+        id: `${this.sourceId}-polygons`,
+        type: 'fill',
+        source: this.sourceId,
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: {
+          'fill-color': '#3388ff',
+          'fill-opacity': 0.4,
+          'fill-outline-color': '#3388ff',
+        },
+      });
+
+      this.map.addLayer({
+        id: `${this.sourceId}-lines`,
+        type: 'line',
+        source: this.sourceId,
+        filter: ['==', ['geometry-type'], 'LineString'],
+        paint: {
+          'line-color': '#3388ff',
+          'line-width': 2,
+        },
+      });
+
+      this.map.addLayer({
+        id: `${this.sourceId}-points`,
+        type: 'circle',
+        source: this.sourceId,
+        filter: ['==', ['geometry-type'], 'Point'],
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#3388ff',
+          'circle-stroke-color': '#fff',
+          'circle-stroke-width': 1,
+        },
+      });
+    }
   }
 
   /**
    * ### updateDataLayer
    *
-   * The updateDataLayer function will clear any markers or shapes previously
-   * added to the GeoJSON layer on the map, and replace them with the data
-   * provided in the `data` argument. The `data` should contain a GeoJSON
-   * FeatureCollection object.
+   * Replace the GeoJSON source's data with the data provided, and apply any
+   * per-slide paint overrides passed in via slideOptions.
    *
    * @param {object} data A GeoJSON FeatureCollection object
-   * @param {object} options Options to pass to L.geoJSON
-   * @return {L.GeoJSONLayer} The new GeoJSON layer that has been added to the
-   *                          data layer group.
+   * @param {object} options Optional paint overrides for this slide's layers
+   *                         e.g. { circlePaint: {...}, linePaint: {...}, fillPaint: {...} }
+   * @return {object} The data that was set, for convenience (bounds calc, etc.)
    */
-  updateDataLayer(data, options) {
-    this.dataLayer.clearLayers();
+  updateDataLayer(data, options = {}) {
+    // Clear old popups from the previous slide
+    this.activePopups.forEach((p) => p.remove());
+    this.activePopups = [];
 
-    const defaultOptions = {
-      pointToLayer: (p, latlng) => L.marker(latlng),
-      style: (feature) => feature.properties.style,
-      onEachFeature: (feature, layer) => {
-        if (feature.properties && feature.properties.label) {
-          layer.bindTooltip(feature.properties.label);
-        }
-      },
-    };
-    const geoJsonLayer = L.geoJSON(data, options || defaultOptions)
-      .addTo(this.dataLayer);
+    const source = this.map.getSource(this.sourceId);
+    source.setData(data);
 
-    return geoJsonLayer;
+    if (options.circlePaint) {
+      Object.entries(options.circlePaint).forEach(([key, val]) =>
+        this.map.setPaintProperty(`${this.sourceId}-points`, key, val)
+      );
+    }
+    if (options.linePaint) {
+      Object.entries(options.linePaint).forEach(([key, val]) =>
+        this.map.setPaintProperty(`${this.sourceId}-lines`, key, val)
+      );
+    }
+    if (options.fillPaint) {
+      Object.entries(options.fillPaint).forEach(([key, val]) =>
+        this.map.setPaintProperty(`${this.sourceId}-polygons`, key, val)
+      );
+    }
+
+    return data;
   }
 
   /**
@@ -79,50 +140,81 @@ class SlideDeck {
   }
 
   /**
+   * Compute a mapboxgl.LngLatBounds from a bbox array [west, south, east, north].
+   */
+  _boundsFromBbox(bbox) {
+    const [west, south, east, north] = bbox;
+    return new mapboxgl.LngLatBounds([west, south], [east, north]);
+  }
+
+  /**
+   * Compute a mapboxgl.LngLatBounds by walking every coordinate in a
+   * GeoJSON FeatureCollection (used when the collection has no bbox).
+   */
+  _boundsFromCollection(collection) {
+    const bounds = new mapboxgl.LngLatBounds();
+
+    const extendWithCoords = (coords) => {
+      if (typeof coords[0] === 'number') {
+        // it's a single [lng, lat] pair
+        bounds.extend(coords);
+      } else {
+        coords.forEach(extendWithCoords);
+      }
+    };
+
+    collection.features.forEach((feature) => {
+      if (feature.geometry && feature.geometry.coordinates) {
+        extendWithCoords(feature.geometry.coordinates);
+      }
+    });
+
+    return bounds;
+  }
+
+  /**
    * ### syncMapToSlide
    *
-   * Go to the slide that mathces the specified ID.
+   * Go to the slide that matches the specified ID.
    *
    * @param {HTMLElement} slide The slide's HTML element
    */
   async syncMapToSlide(slide) {
     const collection = await this.getSlideFeatureCollection(slide);
     const options = this.slideOptions[slide.id];
-    const layer = this.updateDataLayer(collection, options);
+    this.updateDataLayer(collection, options);
+
+    const bounds = collection.bbox
+      ? this._boundsFromBbox(collection.bbox)
+      : this._boundsFromCollection(collection);
 
     /**
-     * Create a bounds object from a GeoJSON bbox array.
-     * @param {Array} bbox The bounding box of the collection
-     * @return {L.latLngBounds} The bounds object
+     * Once the map finishes flying to the new bounds, show popups
+     * for point features if this slide wants them (slide.showpopups),
+     * mirroring the original "permanent tooltip" behavior.
      */
-    const boundsFromBbox = (bbox) => {
-      const [west, south, east, north] = bbox;
-      const bounds = L.latLngBounds(
-        L.latLng(south, west),
-        L.latLng(north, east),
-      );
-      return bounds;
-    };
-
-    /**
-     * Create a temporary event handler that will show tooltips on the map
-     * features, after the map is done "flying" to contain the data layer.
-     */
-    const handleFlyEnd = () => {
+    const handleMoveEnd = () => {
       if (slide.showpopups) {
-        layer.eachLayer((l) => {
-          l.bindTooltip(l.feature.properties.label, { permanent: true });
-          l.openTooltip();
+        collection.features.forEach((feature) => {
+          if (
+            feature.geometry.type === 'Point' &&
+            feature.properties &&
+            feature.properties.label
+          ) {
+            const popup = new mapboxgl.Popup({ closeOnClick: false, closeButton: false })
+              .setLngLat(feature.geometry.coordinates)
+              .setText(feature.properties.label)
+              .addTo(this.map);
+            this.activePopups.push(popup);
+          }
         });
       }
-      this.map.removeEventListener('moveend', handleFlyEnd);
     };
 
-    this.map.addEventListener('moveend', handleFlyEnd);
-    if (collection.bbox) {
-      this.map.flyToBounds(boundsFromBbox(collection.bbox));
-    } else {
-      this.map.flyToBounds(layer.getBounds());
+    this.map.once('moveend', handleMoveEnd);
+
+    if (!bounds.isEmpty()) {
+      this.map.fitBounds(bounds, { padding: 40 });
     }
   }
 
@@ -150,7 +242,7 @@ class SlideDeck {
   }
 
   /**
-   * Decrement the currentSlideIndes and show the corresponding slide. If the
+   * Decrement the currentSlideIndex and show the corresponding slide. If the
    * current slide is the first slide, then the previous is the final.
    */
   goPrevSlide() {

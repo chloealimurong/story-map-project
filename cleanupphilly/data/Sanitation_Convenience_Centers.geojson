@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "Sanitation_Convenience_Centers",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "OBJECTID": 7, "NAME": "Port Richmond", "ADDRESS": "3901 N Delaware Ave", "PHONE": "215-685-1358" }, "geometry": { "type": "Point", "coordinates": [ -75.079815999535796, 39.984504970622403 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 8, "NAME": "West Philadelphia", "ADDRESS": "5100 Grays Ave", "PHONE": "215-685-2600" }, "geometry": { "type": "Point", "coordinates": [ -75.212315342249497, 39.937011987133403 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 9, "NAME": "Strawberry Mansion", "ADDRESS": "2601 W Glenwood Ave", "PHONE": "215-685-3981" }, "geometry": { "type": "Point", "coordinates": [ -75.177521964379807, 39.986127257297497 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 10, "NAME": "Southwest Philadelphia", "ADDRESS": "3033 S 63rd St", "PHONE": "215-685-4290" }, "geometry": { "type": "Point", "coordinates": [ -75.221690622165497, 39.919515429645102 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 11, "NAME": "Northwest Philadelphia", "ADDRESS": "300 Domino Ln", "PHONE": "215-685-2502" }, "geometry": { "type": "Point", "coordinates": [ -75.240078760727002, 40.038579294791198 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 12, "NAME": "Northeast Philadelphia", "ADDRESS": "State Rd & Ashburner St", "PHONE": "215-685-8072" }, "geometry": { "type": "Point", "coordinates": [ -75.011314045061098, 40.037050311048702 ] } }
+]
+}
