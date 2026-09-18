@@ -27,36 +27,46 @@ map.on("load", function () {
           "interpolate",
           ["linear"],
           ["get", "count_"],
-          1, "#ff4400",
-          10, "#ffba31",
-          25, "#ffffff",
+          1, "#f7fcb9",
+          10, "#addd8e",
+          25, "#31a354",
         ],
       },
     },
     "road-label-simple"
   );
-});
-
-map.on("click", "turnstileData", function (e) {
-  var entriesDiff = e.features[0].properties.ENTRIES_DIFF;
-  var entries_06 = e.features[0].properties.ENTRIES_06;
-  var entries_20 = e.features[0].properties.ENTRIES_20;
-  var stationName = e.features[0].properties.stationName;
-  new mapboxgl.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(
-      "<h4>" + stationName + "</h4>" +
-        "<p><b>Friday, March 6th:</b> " + entries_06 + " entries<br>" +
-        "<b>Friday, March 20th:</b> " + entries_20 + " entries<br>" +
-        "<b>Change:</b> " + Math.round(entriesDiff * 1000) / 10 + "%</p>"
-    )
-    .addTo(map);
-});
-
-map.on("mouseenter", "turnstileData", function () {
-  map.getCanvas().style.cursor = "pointer";
-});
-
-map.on("mouseleave", "turnstileData", function () {
-  map.getCanvas().style.cursor = "";
+  map.addLayer(
+    {
+      id: "sanitationCC",
+      type: "circle",
+      source: {
+        type: "geojson",
+        data: "data/Sanitation_Convenience_Centers.geojson",
+      },
+      paint:
+      {
+        "circle-color": "#7fcdbb",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1,
+      },
+    },
+  );
+  map.addLayer(
+    {
+      id: "permLandfill",
+      type: "circle",
+      source: {
+        type: "shp",
+        data: "data/Permitted_Landfills.shp",
+      },
+      paint: 
+      {
+        "circle-color": "#2c7fb8",
+        "circle-radius": 6,
+        "circle-stroke-color":"#ffff",
+        "circle-stroke-width": 1,
+      }
+    }
+  )
 });
