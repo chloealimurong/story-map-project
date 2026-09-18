@@ -55,18 +55,33 @@ map.on("load", function () {
   map.addLayer(
     {
       id: "permLandfill",
-      type: "circle",
+      type: "point",
       source: {
-        type: "shp",
-        data: "data/Permitted_Landfills.shp",
+        type: "geojson",
+        data: "data/Permitted_Landfills.geojson",
       },
       paint: 
       {
-        "circle-color": "#2c7fb8",
-        "circle-radius": 6,
-        "circle-stroke-color":"#ffff",
-        "circle-stroke-width": 1,
+        "point-color": "#fa9fb5",
+        "point-radius": 6,
+        "point-stroke-color":"#ffffff",
+        "point-stroke-width": 1,
       }
+    }
+  );
+  map.addLayer(
+    {
+      id: "philNeighborhood",
+    type: "fill",
+    source: {
+      type: "geojson",
+      data: "data/philadelphia-neighborhoods.geojson", 
+    },
+    paint: {
+      "fill-color": "#edf8b1",
+      "fill-opacity": 0.4,
+      "fill-outline-color": "#ffffff",
+    },
     }
   )
 });
