@@ -46,20 +46,6 @@ map.on("load", function () {
       // subtract philly from rectangle
       const mask = turf.difference(world, philly.features[0]);
 
-      // fill layer first so the rest of the data lays on top
-      map.addLayer({
-        id: "philly-mask",
-        type: "fill",
-        source: {
-          type: "geojson",
-          data: mask,
-        },
-        paint: {
-          "fill-color": "#ffffff",
-          "fill-opacity": 1,
-        },
-      });
-
       map.addLayer({
         id: "philNeighborhood_Labels",
         type: "symbol",
@@ -77,7 +63,6 @@ map.on("load", function () {
           "text-color": "#000000",
         },
       });
-
       map.addLayer(
         {
           id: "illegalDumping",
@@ -114,21 +99,26 @@ map.on("load", function () {
         },
       });
 
+      map.loadImage("data/trashcan-icon.png", (error, image) => {
+        if (error) throw error;
+        if (!map.hasImage("landfill-icon")) {
+          map.addImage("landfill-icon", image);
+        };
+
       map.addLayer({
         id: "permLandfill",
-        type: "circle",
+        type: "symbol",
         source: {
           type: "geojson",
-          data: "data/Permitted_Landfills.geojson",
+          data: "data/Permitted_Landfills_WGS84.geojson",
         },
-        paint: {
-          "circle-color": "#fa9fb5",
-          "circle-radius": 6,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1,
+        layout: {
+          "icon-image": "landfill-icon",
+          "icon-size": 0.05,
+          "icon-allow-overlap": true
         },
+        filter: ["within",philly]
       });
-
       map.addLayer({
         id: "philNeighborhood",
         type: "fill",
@@ -142,5 +132,19 @@ map.on("load", function () {
           "fill-outline-color": "#000000",
         },
       });
+      // fill layer last so the rest of the data lays on top
+      map.addLayer({
+        id: "philly-mask",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: mask,
+        },
+        paint: {
+          "fill-color": "#ffffff",
+          "fill-opacity": 1,
+        },
+      });
     }); 
+  });
 }); 
