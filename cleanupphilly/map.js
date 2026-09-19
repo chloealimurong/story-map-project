@@ -79,9 +79,28 @@ map.on("load", function () {
     },
     paint: {
       "fill-color": "#edf8b1",
-      "fill-opacity": 0.4,
-      "fill-outline-color": "#ffffff",
+      "fill-opacity": 0.2,
+      "fill-outline-color": "#000000",
     },
     }
+  )
+  map.addLayer(
+    {
+      id: "philNeighborhood_Labels",
+      type: "symbol",
+      source: {
+        type: "geojson",
+        data: "data/philadelphia-neighborhoods.geojson",
+      },
+      layout: {
+        "text-field": ["get", "NAME"],
+        "text-size": 30,
+        "text-anchor": center,
+      },
+    paint: {
+      "text-color": "#000000",
+      "text-size": 60
+    },
+  }
   )
 });
