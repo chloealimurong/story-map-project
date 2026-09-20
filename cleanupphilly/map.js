@@ -98,7 +98,7 @@ map.on("load", function () {
         },
       });
 
-      map.loadImage("data/sanitation-symbol.png", (error, image) => {
+      map.loadImage("data/sanitation_symbol.png", (error, image) => {
         map.addImage("sanitation-icon", image);
 
       map.addLayer({
@@ -108,9 +108,9 @@ map.on("load", function () {
           type: "geojson",
           data: "data/Sanitation_Convenience_Centers.geojson",
         },
-        paint: {
+        layout: {
           "icon-image": "sanitation-icon",
-          "icon-size": 0.05,
+          "icon-size": 0.08,
           "icon-allow-overlap": true,
         },
       });
@@ -151,7 +151,7 @@ map.on("load", function () {
         },
       });
 
-      map.loadImage("data/recycling-symbol.png", (error, image) => {
+      map.loadImage("data/recycling_symbol.png", (error, image) => {
         map.addImage("recycle-icon", image);
 
       map.addLayer({
@@ -161,10 +161,10 @@ map.on("load", function () {
           type: "geojson",
           data: "data/Recycling_Donation_Sites.geojson",
         },
-        paint: {
+        layout: {
           "icon-image": "recycle-icon",
           "icon-size": 0.05,
-          "icon-allow-overlap": true,
+          "icon-allow-overlap": false,
         },
       });
 
@@ -193,6 +193,10 @@ map.on("load", function () {
           map.setLayoutProperty("permLandfill", "visibility", "none");
           map.setLayoutProperty("recycleSites", "visibility", "none");
           map.setLayoutProperty("recycleRate", "visibility", "none");
+
+          if (slideId === "title-slide" || slideId === "second-slide") {
+            map.setLayoutProperty("recycleSites", "visibility", "visible")
+          }
 
           if (slideId === "third-slide" || slideId === "fourth-slide") {
             map.setLayoutProperty("illegalDumping", "visibility", "visible");
