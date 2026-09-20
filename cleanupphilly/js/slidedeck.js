@@ -131,6 +131,7 @@ class SlideDeck {
    * null, then show the first slide.
    */
   syncMapToCurrentSlide() {
+    updateLayers(slide.id);
     const slide = this.slides[this.currentSlideIndex];
     this.syncMapToSlide(slide);
   }

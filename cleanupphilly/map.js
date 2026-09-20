@@ -30,11 +30,12 @@ map.on("load", function () {
           feature.properties.NAME = feature.properties.NAME.replace(/_/g, " ");
         }
       });
+
       // adding a mask so users only see philly
       const cleanedData = turf.truncate(data, { precision: 6, coordinates: 2 });
       const philly = turf.combine(cleanedData);
 
-      // big rectangle that encapsulates the rest of the world 
+      // big rectangle that encapsulates the rest of the world
       const world = turf.polygon([[
         [-180, -85],
         [180, -85],
@@ -45,6 +46,20 @@ map.on("load", function () {
 
       // subtract philly from rectangle
       const mask = turf.difference(world, philly.features[0]);
+
+      // mask goes first so everything else draws on top of it
+      map.addLayer({
+        id: "philly-mask",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: mask,
+        },
+        paint: {
+          "fill-color": "#ffffff",
+          "fill-opacity": 1,
+        },
+      });
 
       map.addLayer({
         id: "philNeighborhood_Labels",
@@ -63,62 +78,43 @@ map.on("load", function () {
           "text-color": "#000000",
         },
       });
-      map.addLayer(
-        {
-          id: "illegalDumping",
-          type: "fill",
-          source: {
-            type: "geojson",
-            data: "data/hex_illegal_dumping.geojson",
-          },
-          paint: {
-            "fill-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "count_"],
-              1, "#f7fcb9",
-              10, "#addd8e",
-              25, "#31a354",
-            ],
-          },
-        }
-      );
+
+      map.addLayer({
+        id: "illegalDumping",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: "data/hex_illegal_dumping.geojson",
+        },
+        paint: {
+          "fill-color": [
+            "interpolate",
+            ["linear"],
+            ["get", "count_"],
+            1, "#f7fcb9",
+            10, "#addd8e",
+            25, "#31a354",
+          ],
+        },
+      });
+
+      map.loadImage("data/sanitation-symbol.png", (error, image) => {
+        map.addImage("sanitation-icon", image);
 
       map.addLayer({
         id: "sanitationCC",
-        type: "circle",
+        type: "symbol",
         source: {
           type: "geojson",
           data: "data/Sanitation_Convenience_Centers.geojson",
         },
         paint: {
-          "circle-color": "#7fcdbb",
-          "circle-radius": 6,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1,
-        },
-      });
-
-      map.loadImage("data/trashcan-icon.png", (error, image) => {
-        if (error) throw error;
-        if (!map.hasImage("landfill-icon")) {
-          map.addImage("landfill-icon", image);
-        };
-
-      map.addLayer({
-        id: "permLandfill",
-        type: "symbol",
-        source: {
-          type: "geojson",
-          data: "data/Permitted_Landfills_WGS84.geojson",
-        },
-        layout: {
-          "icon-image": "landfill-icon",
+          "icon-image": "sanitation-icon",
           "icon-size": 0.05,
-          "icon-allow-overlap": true
+          "icon-allow-overlap": true,
         },
-        filter: ["within",philly]
       });
+
       map.addLayer({
         id: "philNeighborhood",
         type: "fill",
@@ -132,19 +128,128 @@ map.on("load", function () {
           "fill-outline-color": "#000000",
         },
       });
-      // fill layer last so the rest of the data lays on top
+
       map.addLayer({
-        id: "philly-mask",
+        id: "recycleRate",
         type: "fill",
         source: {
           type: "geojson",
-          data: mask,
+          data: "data/Recycling_Diversion_Rate.geojson",
         },
         paint: {
-          "fill-color": "#ffffff",
+          "fill-color": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            0, "#f1eef6",
+            10, "#bdc9e1",
+            20, "#74a9cf",
+            30, "#0570b0",
+          ],
           "fill-opacity": 1,
+          "fill-outline-color": "#ffffff",
         },
       });
-    }); 
-  });
-}); 
+
+      map.loadImage("data/recycling-symbol.png", (error, image) => {
+        map.addImage("recycle-icon", image);
+
+      map.addLayer({
+        id: "recycleSites",
+        type: "symbol",
+        source: {
+          type: "geojson",
+          data: "data/Recycling_Donation_Sites.geojson",
+        },
+        paint: {
+          "icon-image": "recycle-icon",
+          "icon-size": 0.05,
+          "icon-allow-overlap": true,
+        },
+      });
+
+      map.loadImage("data/trashcan-icon.png", (error, image) => {
+        map.addImage("landfill-icon", image);
+
+        map.addLayer({
+          id: "permLandfill",
+          type: "symbol",
+          source: {
+            type: "geojson",
+            data: "data/Permitted_Landfills_WGS84.geojson",
+          },
+          layout: {
+            "icon-image": "landfill-icon",
+            "icon-size": 0.05,
+            "icon-allow-overlap": true,
+          },
+          filter: ["within", philly],
+        });
+
+        function updateLayers(slideId) {
+          console.log("updateLayers called with:", slideId);
+          map.setLayoutProperty("illegalDumping", "visibility", "none");
+          map.setLayoutProperty("sanitationCC", "visibility", "none");
+          map.setLayoutProperty("permLandfill", "visibility", "none");
+          map.setLayoutProperty("recycleSites", "visibility", "none");
+          map.setLayoutProperty("recycleRate", "visibility", "none");
+
+          if (slideId === "third-slide" || slideId === "fourth-slide") {
+            map.setLayoutProperty("illegalDumping", "visibility", "visible");
+          }
+
+          if (slideId === "fourth-slide") {
+            const targetNames = ["JUNIATA PARK", "UPPER KENSINGTON", "PORT RICHMOND"]; 
+            const selectedFeatures = data.features.filter((f) =>
+                targetNames.includes(f.properties.NAME)
+              );
+              console.log("Matched features:", selectedFeatures.length, selectedFeatures.map(f => f.properties.NAME));
+
+              if (selectedFeatures.length > 0) {
+                const combined = turf.combine(turf.featureCollection(selectedFeatures));
+                const bbox = turf.bbox(combined);
+                map.fitBounds(bbox, { padding: 80 });
+              }
+          }
+          if (slideId === "fifth-slide") {
+            map.fitBounds(
+              [
+                [-75.4, 39.85],
+                [-74.85, 40.15],
+              ],
+              { padding: 40 }
+            );
+          }
+
+          if (slideId === "sixth-slide") {
+            map.setLayoutProperty("sanitationCC", "visibility", "visible");
+            map.setLayoutProperty("permLandfill", "visibility", "visible");
+            map.setLayoutProperty("recycleSites", "visibility", "visible");
+          }
+
+          if (slideId === "seventh-slide") {
+            map.setLayoutProperty("recycleRate", "visibility", "visible");
+          }
+        } 
+
+        const slideObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                updateLayers(entry.target.id);
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+
+        document.querySelectorAll(".slide").forEach((slide) => {
+          slideObserver.observe(slide);
+        });
+
+        updateLayers("title-slide"); // set initial state once everything exists
+      });
+      });
+      }); 
+    }); // closes .then((data) => {...})
+}); // closes map.on("load", function () {...})
