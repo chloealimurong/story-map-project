@@ -187,7 +187,17 @@ map.on("load", function () {
         });
 
         function updateLayers(slideId) {
-          console.log("updateLayers called with:", slideId);
+          const mapElement = document.getElementById("map");
+          const fifthImage = document.getElementById("fifth-slide-image");
+
+          mapElement.style.display = "block";
+          fifthImage.style.display = "none";
+
+          if (slideId === "fifth-slide") {
+            mapElement.style.display = "none";
+            fifthImage.style.display = "block";
+          }
+          
           map.setLayoutProperty("illegalDumping", "visibility", "none");
           map.setLayoutProperty("sanitationCC", "visibility", "none");
           map.setLayoutProperty("permLandfill", "visibility", "none");
