@@ -197,7 +197,7 @@ map.on("load", function () {
             mapElement.style.display = "none";
             fifthImage.style.display = "block";
           }
-          
+
           map.setLayoutProperty("illegalDumping", "visibility", "none");
           map.setLayoutProperty("sanitationCC", "visibility", "none");
           map.setLayoutProperty("permLandfill", "visibility", "none");
