@@ -107,11 +107,11 @@ Commit your code and push it to your repository on GitHub. Set up GitHub pages o
 
 #### Submission Checklist
 
-- [ ] Pushed latest code to the `main` branch of your repository
-- [ ] Updated the `README.md` file with a description of your project, and data citations.
-- [ ] Linted JS and CSS code
-- [ ] Verified a11y of your site
+- [√] Pushed latest code to the `main` branch of your repository
+- [√] Updated the `README.md` file with a description of your project, and data citations.
+- [√] Linted JS and CSS code
+- [√] Verified a11y of your site
 - [ ] Turned on GitHub Pages for the repository and verified that your site works when deployed
 - [ ] Submitted a pull request to the original repository in the class organization
-- [ ] In the PR **title**, included your name at least
-- [ ] In the PR **description**, included a brief description of your topic, and your target audience
+- [√] In the PR **title**, included your name at least
+- [√] In the PR **description**, included a brief description of your topic, and your target audience
