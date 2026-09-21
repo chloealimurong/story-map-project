@@ -217,7 +217,6 @@ map.on("load", function () {
             const selectedFeatures = data.features.filter((f) =>
                 targetNames.includes(f.properties.NAME)
               );
-              console.log("Matched features:", selectedFeatures.length, selectedFeatures.map(f => f.properties.NAME));
 
               if (selectedFeatures.length > 0) {
                 const combined = turf.combine(turf.featureCollection(selectedFeatures));

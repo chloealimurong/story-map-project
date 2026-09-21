@@ -4,7 +4,7 @@ body {
   box-sizing: border-box;
   height: 100vh;
 
-  font-family: 'Didot', serif;
+  font-family: Didot, serif;
 }
 
 .map-container {
@@ -87,7 +87,7 @@ body {
   width: 100%;
   max-width: 600px;
   display: block;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 20px;
   border-radius: 8px;
 }
 
