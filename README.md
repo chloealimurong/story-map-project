@@ -1,5 +1,4 @@
-# [https://chloealimurong.github.io/story-map-project/cleanupphilly](Clean Up Philadelphia)
-
+# [Clean Up Philadelphia](https://chloealimurong.github.io/story-map-project/cleanupphilly)
 A scrollytelling story map on excess waste in Philadelphia. Built by Chloe Alimurong, MUSA 6110.
 
 ## Content Overview
