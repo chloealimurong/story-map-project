@@ -12,6 +12,7 @@ var map = new mapboxgl.Map({
     [-74.85, 40.15]
   ],
 });
+map.scrollZoom.disable();
 
 map.on("load", function () {
   const style = map.getStyle();
