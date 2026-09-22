@@ -97,3 +97,24 @@ body {
   height: 100%;
   object-fit: cover;
 }
+
+.info-button {
+  position: relative;
+}
+
+.info-tooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #000;
+  padding: 0.5em;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.info-button:hover .info-tooltip,
+.info-button:focus .info-tooltip {
+  display: block;
+}
