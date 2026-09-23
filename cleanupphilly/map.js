@@ -25,12 +25,25 @@ map.on("load", function () {
   fetch("data/philadelphia-neighborhoods.geojson")
     .then((res) => res.json())
     .then((data) => {
-      // Replace underscores with spaces in every feature's NAME property
+      // replace underscores with spaces in name
       data.features.forEach((feature) => {
         if (feature.properties.NAME) {
           feature.properties.NAME = feature.properties.NAME.replace(/_/g, " ");
         }
       });
+      
+      // drop-down neighborhood list
+      const select = document.getElementById("neighborhood-select");
+      const sortedNames = data.features
+        .map((f) => f.properties.NAME)
+        .sort();
+
+      sortedNames.forEach((name) => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+        });
 
       // adding a mask so users only see philly
       const cleanedData = turf.truncate(data, { precision: 6, coordinates: 2 });
@@ -62,6 +75,32 @@ map.on("load", function () {
         },
       });
 
+      // select neighborhood outline
+      map.addSource("select-neighborhood", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: []
+        }
+      });
+
+      select.addEventListener("change", (e) => {
+        const chosenName = e.target.value;
+        if (!chosenName) return;
+
+        const feature = data.features.find((f) => f.properties.NAME === chosenName);
+        if (!feature) return;
+
+        map.getSource("select-neighborhood").setData({
+          type: "FeatureCollection",
+          features: [feature],
+        });
+
+        const bbox = turf.bbox(feature);
+        map.fitBounds(bbox, { padding: 60 });
+      });
+
+      // philly neighborhood labels
       map.addLayer({
         id: "philNeighborhood_Labels",
         type: "symbol",
@@ -80,6 +119,7 @@ map.on("load", function () {
         },
       });
 
+      // illegal dumping hexagons
       map.addLayer({
         id: "illegalDumping",
         type: "fill",
@@ -99,6 +139,7 @@ map.on("load", function () {
         },
       });
 
+      // sanitation convenience centers
       map.loadImage("data/sanitation_symbol.png", (error, image) => {
         map.addImage("sanitation-icon", image);
 
@@ -116,6 +157,7 @@ map.on("load", function () {
         },
       });
 
+      // underlying philly neighborhood overlay (just a fancy yellow highlight)
       map.addLayer({
         id: "philNeighborhood",
         type: "fill",
@@ -130,6 +172,7 @@ map.on("load", function () {
         },
       });
 
+      // recycle diversion rate
       map.addLayer({
         id: "recycleRate",
         type: "fill",
@@ -152,6 +195,7 @@ map.on("load", function () {
         },
       });
 
+      // recycling centers
       map.loadImage("data/recycling_symbol.png", (error, image) => {
         map.addImage("recycle-icon", image);
 
@@ -169,6 +213,7 @@ map.on("load", function () {
         },
       });
 
+      // landfills
       map.loadImage("data/trashcan-icon.png", (error, image) => {
         map.addImage("landfill-icon", image);
 
@@ -187,6 +232,17 @@ map.on("load", function () {
           filter: ["within", philly],
         });
 
+        map.addLayer({
+        id: "select-neighborhood-outline",
+        type: "line",
+        source: "select-neighborhood",
+        paint: {
+          "line-color": "#c51b8a",
+          "line-width": 3,
+          },
+        });
+
+        // slides and their corresponding layers 
         function updateLayers(slideId) {
           const mapElement = document.getElementById("map");
           const fifthImage = document.getElementById("fifth-slide-image");

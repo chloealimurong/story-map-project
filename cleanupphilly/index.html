@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Story</title>
+  <title>Clean Up Philly</title>
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
@@ -19,6 +19,9 @@
       i
       <span class="info-tooltip">Click twice or use + or - to zoom into the map</span>
     </button>
+    <select id="neighborhood-select">
+    <option value="">Select your neighborhood</option>
+    </select>
     <div class="map-container">
       <div class="map" id="map"></div>
       <img id="fifth-slide-image" src="data/illegal_dumping-image.jpeg" alt = "Illegal Dumpsite">
